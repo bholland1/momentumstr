@@ -22,6 +22,7 @@ import statsmodels.api as sm
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+import glob
 sns.set(style='ticks', context='talk')
 
 
@@ -76,7 +77,9 @@ def ranker(tickers):
     list_c = []
     rank_list = []
     #need to change to local file directory
-    file_dir = glob.glob('C:\\Users\\brock\\Desktop\\Momentum\\stock_dfs\\*.csv')
+    file_dir = glob.glob('C:\\Users\\Aaron\\Documents\\momentumstr\\stock_dfs\\*.csv')
+    tickers.sort()
+    file_dir.sort()
 
     for file_name,j in zip(file_dir, tickers):
             ticker_data = pd.read_csv(file_name,index_col = 0)
@@ -84,6 +87,7 @@ def ranker(tickers):
             score = momentum_ranking(ticker_data)
             list_c.append(j) #need to retain name
             list_c.append(score)#retail score
+            list_c.append(ticker_data['Close'][-1])
             rank_list.append(list_c)
             list_c = []
             score = 0 
@@ -96,7 +100,7 @@ def momentum_ranking(ticker):
     #print(ticker)
     ticker.head().round(2)
     ticker['Log'] =  np.log(ticker['Close'])
-    ticker['Index'] = range(88)
+    ticker['Index'] = range(len(ticker))
     model = smf.ols(formula = "ticker['Log'] ~ ticker['Index']", data = ticker) 
     results = model.fit()
     R = results.rsquared
@@ -104,8 +108,75 @@ def momentum_ranking(ticker):
     
     ann_slope = ((1 + slope)**252) - 1
     adj_slope = ann_slope * R
-  #  print(R, ann_slope)
-    return adj_slope
+    return (adj_slope)
+
+def allocation(ticker, ATR_period, risk_factor, funds_available):
+    Addr = 'C:\\Users\\Aaron\\Documents\\momentumstr\\stock_dfs\\'
+    Addr = Addr + ticker +'.csv'
+    
+    ticker = pd.read_csv(Addr,index_col = 0)
+    #Need dataset here
+        
+    ticker['ATR1'] = abs (ticker['High'] - ticker['Low'])  
+    ticker['ATR2'] = abs (ticker['High'] - ticker['Close'].shift())
+    ticker['ATR3'] = abs (ticker['Low'] - ticker['Close'].shift())
+    ticker['TrueRange'] = ticker[['ATR1', 'ATR2', 'ATR3']].max(axis=1)    
+    count = 0    
+    TR_sum = 0    
+    
+    while count < (ATR_period - 1):
+        TR_sum += ticker['TrueRange'][count]
+        count += 1
+    
+    ticker['ATR'] = 0
+    ticker['ATR'][0] = (1/ATR_period) * TR_sum 
+    count = 1
+    while count < len(ticker['ATR']):
+        ticker['ATR']= (ticker['ATR'].shift() * (ATR_period -1) + ticker['TrueRange'])/(ATR_period)
+        count +=1
+    
+    
+    allocation = int((funds_available * risk_factor)/ticker['ATR'][-1])
+    return (allocation)   
+
+
+def list_final(ticker, ATR_period, risk_factor, funds_available):
+    '''
+    Returns a final list with ticker, adj. slope and allocation of shares
+    '''
+    final_list = [] 
+    funds_allocated = 0
+    
+    Rank_list = ranker(ticker_list)
+     
+    for i in Rank_list:
+        funds_available = funds_available - funds_allocated
+        funds_allocated = 0
+        if funds_available <= 0:      
+            return final_list
+        else:
+            shares = allocation(i[0], ATR_period, risk_factor, funds_available)
+            funds_allocated = shares * i[2]
+            Rank_list.append(shares)            
+            Rank_list.append(funds_allocated)
+            final_list.append(i)
+    
+    return final_list
+            
+            
+            
+            
+            
+            
+    
+    #round down or up to nearest integer
+    # Subtract closing price * adj. shares from funds available
+    # stop appending list when funds available is 0
+    
+        
+    
+
+
 
 
 
@@ -114,7 +185,6 @@ ticker_list = save_sp500_tickers()
 get_data_from_yahoo()
 Rank_list = ranker(ticker_list)
 
-print(Rank_list)
 
 
 

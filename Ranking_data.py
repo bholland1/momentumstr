@@ -15,6 +15,9 @@ import os
 import pandas as pd
 import pandas_datareader.data as web
 from pandas.tseries.offsets import BDay
+from pandas.tseries.holiday import USFederalHolidayCalendar as calendar
+import pandas_market_calendars as mcal
+
 import csv 
 import statsmodels.formula.api as smf
 import statsmodels.tsa.api as smt
@@ -41,27 +44,50 @@ def save_sp500_tickers():
         pickle.dump(tickers,f)
     return tickers
 
-def get_data_from_yahoo(reload_sp500=False):
+def get_data_from_yahoo(ticker_list,period):
     
-    if reload_sp500:
-        tickers = save_sp500_tickers()
-    else:
-        with open("sp500tickers.pickle","rb") as f:
-            tickers = pickle.load(f)
+#    if reload_sp500:
+#        tickers = save_sp500_tickers()
+#    else:
+#    with open("sp500tickers.pickle","rb") as f:
+#        tickers_list = pickle.load(f)
     if not os.path.exists('stock_dfs'):
         os.makedirs('stock_dfs')
+   
+    start, end = True_start_end_period(period)
+       
+    for ticker in ticker_list:
         
-    start = pd.datetime.today()- BDay(90)
-    end = pd.datetime.today()
-    
-    for ticker in tickers:
         if not os.path.exists('stock_dfs/{}.csv'.format(ticker)):
             df = retry(web.DataReader)(ticker, "yahoo", start, end)
             df.to_csv('stock_dfs/{}.csv'.format(ticker))
         else:
-            #print('Already have {}'.format(ticker)) 
-            b=1
-            
+            print('Already have {}'.format(ticker)) 
+ 
+def True_start_end_period(period, *start_date):
+    ##In format --> start_data = 2017/10/30
+    nyse = mcal.get_calendar('NYSE')
+    period_init = period
+    if not start_date:
+        start = pd.datetime.today() - BDay(period_init)
+        end = pd.datetime.today()
+    else:
+        start_date = start_date.split('/').split('-')
+        start = pd.datetime(start_date[0],start_date[1],start_date[2]) - BDay(period_init)
+        end = pd.datetime(start_date[0],start_date[1],start_date[2])
+        
+    dates = nyse.schedule(start_date=start, end_date=end)
+    date_range = mcal.date_range(dates,frequency ='1D')
+    ###   
+    while(len(date_range) <= period_init):
+        start = start - BDay(1)
+        end = pd.datetime.today()
+        dates = nyse.schedule(start_date=start, end_date=end)
+        date_range = mcal.date_range(dates,frequency ='1D')
+        
+    return start, end
+    
+           
 def retry(f, n_attempts=5):
     "Wrapper function to retry function calls in case of exceptions"
     def wrapper(*args, **kwargs):
@@ -77,38 +103,55 @@ def ranker(tickers):
     list_c = []
     rank_list = []
     #need to change to local file directory
-    file_dir = glob.glob('C:\\Users\\Aaron\\Documents\\momentumstr\\stock_dfs\\*.csv')
+    file_dir = glob.glob('C:\\Users\\Brock\\Desktop\\momentum\\stock_dfs\\*.csv')
     tickers.sort()
     file_dir.sort()
 
     for file_name,j in zip(file_dir, tickers):
             ticker_data = pd.read_csv(file_name,index_col = 0)
-
-            score = momentum_ranking(ticker_data)
-            list_c.append(j) #need to retain name
-            list_c.append(score)#retail score
-            list_c.append(ticker_data['Close'][-1])
-            rank_list.append(list_c)
-            list_c = []
-            score = 0 
-                
+            # test if ticker is trading below 100 day moving average
+            moving_average = Moving_average(ticker_data,100)
+            if not moving_average:
+                pass
+            else:
+                score = momentum_ranking(ticker_data)
+                list_c.append(j) #need to retain name
+                list_c.append(score)#retail score
+                list_c.append(ticker_data['Close'][-1])
+                rank_list.append(list_c)
+                list_c = []
+            score = 0             
     rank_list = sorted(rank_list, key=lambda x: x[1], reverse = True)
-    
     return rank_list
 
 def momentum_ranking(ticker):      
     #print(ticker)
-    ticker.head().round(2)
-    ticker['Log'] =  np.log(ticker['Close'])
-    ticker['Index'] = range(len(ticker))
-    model = smf.ols(formula = "ticker['Log'] ~ ticker['Index']", data = ticker) 
-    results = model.fit()
-    R = results.rsquared
-    slope = results.params[1]
+    ## Check for 15% price movement difference. 
+    Change = ((ticker['Close'] - ticker['Open'].shift())/ticker['Close'])*100
+    Price_diff = Change.loc[(Change >= 15)].loc[(Change <= -15)]
+    if len(Price_diff) >= 1: 
+        return -100  # or somthing equivalent to eliminate it from the list. 
     
-    ann_slope = ((1 + slope)**252) - 1
-    adj_slope = ann_slope * R
-    return (adj_slope)
+    else:
+        ticker.head().round(2)
+        ticker['Log'] =  np.log(ticker['Close'])
+        ticker['Index'] = range(len(ticker))
+        model = smf.ols(formula = "ticker['Log'] ~ ticker['Index']", data = ticker) 
+        results = model.fit()
+        R = results.rsquared
+        slope = results.params[1]
+        ann_slope = ((1 + slope)**252) - 1
+        adj_slope = ann_slope * R
+        
+        return (adj_slope)
+    
+def Moving_average(ticker,period):
+    
+    Moving_avr = ticker['Close'].rolling(window=period).mean()
+    if Moving_avr[-1] > ticker['Close'][-1]:
+        return False
+    else:     
+        return True
 
 def allocation(ticker, ATR_period, risk_factor, funds_available):
     Addr = 'C:\\Users\\Aaron\\Documents\\momentumstr\\stock_dfs\\'
@@ -116,7 +159,6 @@ def allocation(ticker, ATR_period, risk_factor, funds_available):
     
     ticker = pd.read_csv(Addr,index_col = 0)
     #Need dataset here
-        
     ticker['ATR1'] = abs (ticker['High'] - ticker['Low'])  
     ticker['ATR2'] = abs (ticker['High'] - ticker['Close'].shift())
     ticker['ATR3'] = abs (ticker['Low'] - ticker['Close'].shift())
@@ -134,8 +176,7 @@ def allocation(ticker, ATR_period, risk_factor, funds_available):
     while count < len(ticker['ATR']):
         ticker['ATR']= (ticker['ATR'].shift() * (ATR_period -1) + ticker['TrueRange'])/(ATR_period)
         count +=1
-    
-    
+
     allocation = int((funds_available * risk_factor)/ticker['ATR'][-1])
     return (allocation)   
 
@@ -160,33 +201,20 @@ def list_final(ticker, ATR_period, risk_factor, funds_available):
             Rank_list.append(shares)            
             Rank_list.append(funds_allocated)
             final_list.append(i)
+    return final_list     
+
+def Index_moving_avr(index,period):
+    get_data_from_yahoo([index],period)
     
-    return final_list
-            
-            
-            
-            
-            
-            
+    file_dir = 'C:\\Users\\Brock\\Desktop\\momentum\\stock_dfs\\'
+    file_dir = file_dir + index + '.csv'
+    Index = pd.read_csv(file_dir,index_col = 0)
     
-    #round down or up to nearest integer
-    # Subtract closing price * adj. shares from funds available
-    # stop appending list when funds available is 0
-    
-        
-    
+    return Moving_average(Index,period)
+ 
 
 
-
-
-
-#quotes.append(retry(quotes_historical_google)(symbol, start_date, end_date))            
+Trade = Index_moving_avr('^GSPC',200)
 ticker_list = save_sp500_tickers()
-get_data_from_yahoo()
+get_data_from_yahoo(ticker_list,200)
 Rank_list = ranker(ticker_list)
-
-
-
-
-
-

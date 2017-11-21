@@ -128,7 +128,7 @@ def momentum_ranking(ticker):
     #print(ticker)
     ## Check for 15% price movement difference. 
     Change = ((ticker['Close'] - ticker['Open'].shift())/ticker['Close'])*100
-    Price_diff = Change.loc[(Change >= 15)].loc[(Change <= -15)]
+    Price_diff = Change.loc[(Change >= 15)]
     if len(Price_diff) >= 1: 
         return -100  # or somthing equivalent to eliminate it from the list. 
     

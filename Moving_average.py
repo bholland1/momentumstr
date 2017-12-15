@@ -32,7 +32,7 @@ def Moving_average(ticker,period):
 def Index_moving_avr(index,period):
     get_data_from_yahoo([index],period)
     
-    file_dir = 'C:\\Users\\Brock\\Desktop\\momentum\\stock_dfs\\'
+    file_dir = 'C:\\FinData\\S&P500\\TimeSeries'
     file_dir = file_dir + index + '.csv'
     Index = pd.read_csv(file_dir,index_col = 0)
     

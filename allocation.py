@@ -22,7 +22,7 @@ import csv
 
 
 def allocation(ticker, ATR_period, risk_factor, funds_available):
-    Addr = 'C:\\Users\\Brock\\Desktop\\Momentum\\stock_dfs\\'
+    Addr = 'C:\\FinData\\S&P500\\TimeSeries'
     Addr = Addr + ticker +'.csv'
     
     ticker = pd.read_csv(Addr,index_col = 0)

@@ -25,11 +25,11 @@ from Moving_average import Moving_average
 from Moving_average import Index_moving_avr
 from list_final import *
 
-
-
+# Constituent list @ C:\FinData\S&P500\ConList
 
 Trade = Index_moving_avr('^GSPC',200)
 ticker_list = save_sp500_tickers()
-#get_data_from_yahoo(ticker_list,200)
+
+get_data_from_yahoo(ticker_list,200)
 Rank_list = ranker(ticker_list)
 List_Final = list_final(Rank_list,20,0.001,100000)

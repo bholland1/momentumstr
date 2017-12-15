@@ -7,9 +7,10 @@ Created on Thu Nov  2 09:03:47 2017
 
 #!/usr/bin/env python
 
-import bs4 as bs
-import pickle
-import requests
+#import bs4 as bs
+#import pickle
+#import requests
+
 import datetime
 import os
 import pandas as pd
@@ -22,13 +23,14 @@ import csv
 import statsmodels.formula.api as smf
 import statsmodels.tsa.api as smt
 import statsmodels.api as sm
+
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import glob
 sns.set(style='ticks', context='talk')
 
-
+##
 def save_sp500_tickers():
     resp = requests.get('http://en.wikipedia.org/wiki/List_of_S%26P_500_companies')
     soup = bs.BeautifulSoup(resp.text, 'lxml')
@@ -43,7 +45,7 @@ def save_sp500_tickers():
     with open("sp500tickers.pickle","wb") as f:
         pickle.dump(tickers,f)
     return tickers
-
+##
 def get_data_from_yahoo(ticker_list,period):
     
 #    if reload_sp500:
@@ -63,7 +65,7 @@ def get_data_from_yahoo(ticker_list,period):
             df.to_csv('stock_dfs/{}.csv'.format(ticker))
         else:
             print('Already have {}'.format(ticker)) 
- 
+ ##
 def True_start_end_period(period, *start_date):
     ##In format --> start_data = 2017/10/30
     nyse = mcal.get_calendar('NYSE')
@@ -87,7 +89,7 @@ def True_start_end_period(period, *start_date):
         
     return start, end
     
-           
+     ##      
 def retry(f, n_attempts=5):
     "Wrapper function to retry function calls in case of exceptions"
     def wrapper(*args, **kwargs):
@@ -98,7 +100,7 @@ def retry(f, n_attempts=5):
                 if i == n_attempts - 1:
                     raise
     return wrapper
-            
+ ##           
 def ranker(tickers):
     list_c = []
     rank_list = []
@@ -123,7 +125,7 @@ def ranker(tickers):
             score = 0             
     rank_list = sorted(rank_list, key=lambda x: x[1], reverse = True)
     return rank_list
-
+##
 def momentum_ranking(ticker):      
     #print(ticker)
     ## Check for 15% price movement difference. 
@@ -144,7 +146,7 @@ def momentum_ranking(ticker):
         adj_slope = ann_slope * R
         
         return (adj_slope)
-    
+    ##
 def Moving_average(ticker,period):
     
     Moving_avr = ticker['Close'].rolling(window=period).mean()
@@ -152,9 +154,9 @@ def Moving_average(ticker,period):
         return False
     else:     
         return True
-
+#########
 def allocation(ticker, ATR_period, risk_factor, funds_available):
-    Addr = 'C:\\Users\\Aaron\\Documents\\momentumstr\\stock_dfs\\'
+    Addr = 'C:\\Users\\Brock\\Documents\\momentumstr\\stock_dfs\\'
     Addr = Addr + ticker +'.csv'
     
     ticker = pd.read_csv(Addr,index_col = 0)
@@ -180,7 +182,7 @@ def allocation(ticker, ATR_period, risk_factor, funds_available):
     allocation = int((funds_available * risk_factor)/ticker['ATR'][-1])
     return (allocation)   
 
-
+###
 def list_final(ticker, ATR_period, risk_factor, funds_available):
     '''
     Returns a final list with ticker, adj. slope and allocation of shares
@@ -209,7 +211,6 @@ def Index_moving_avr(index,period):
     file_dir = 'C:\\Users\\Brock\\Desktop\\momentum\\stock_dfs\\'
     file_dir = file_dir + index + '.csv'
     Index = pd.read_csv(file_dir,index_col = 0)
-    
     return Moving_average(Index,period)
  
 

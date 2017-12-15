@@ -28,7 +28,7 @@ def ranker(tickers):
     list_c = []
     rank_list = []
     #need to change to local file directory
-    file_dir = glob.glob('C:\\Users\\Brock\\Desktop\\momentum\\stock_dfs\\*.csv')
+    file_dir = glob.glob('C:\\FinData\\S&P500\\TimeSeries\\*.csv')
     tickers.sort()
     file_dir.sort()
 

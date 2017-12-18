@@ -22,6 +22,10 @@ import csv
 
 
 def allocation(ticker, ATR_period, risk_factor, funds_available):
+    '''
+    Generates an allocation for a given share, returning a single integer value
+    e.g. 100 shares
+    '''
     Addr = 'C:\\FinData\\S&P500\\TimeSeries'
     Addr = Addr + ticker +'.csv'
     

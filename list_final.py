@@ -22,7 +22,11 @@ from allocation import allocation
 
 def list_final(Rank_list, ATR_period, risk_factor, funds_available):
     '''
-    Returns a final list with ticker, adj. slope and allocation of shares
+    Returns a final list with ticker, adj. slope, open price, allocation of shares and total
+    funds allocated to the share.
+    Format will appear as follows:
+    [(company ticker), (adj. slope), (current open price),  (shares), (funds allocated)]
+    
     '''
     final_list = [] 
     i_list = []

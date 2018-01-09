@@ -65,7 +65,7 @@ Proceduraly, it works as follows:
 '''----------------------FILE NAMES---------------------------------------- '''
 CONSLIST = 'C:\\FinData\\S&P500\\ConList\\Final_DoW2.csv'
 INDEX = 'C:\FinData\S&P500\\ConList\\SP500_1.csv'
-
+TICKERNAMES = 'C:\\FinData\\S&P500\\all.csv'
 '''------------------BACK TESTING PARAMETERS------------------------------- '''
 Start_date =  '5/01/1998'#'1999-01-02'#pd.to_datetime('1999-01-02')#datetime.date(1999, 01, 02) #
 End_date =  '31/12/2013' #'2014-12-31' #pd.to_datetime('2014-12-31')# datetime.date(2014, 12, 31) #
@@ -96,6 +96,8 @@ SP500 = pd.read_csv(INDEX, index_col = 0)
 SP500 = SP500[Start_date:End_date]
 SP500 = SP500.reset_index()
 SP500.rename(columns = {'index': 'date'}, inplace = True)
+ticnam = pd.read_csv(TICKERNAMES)
+
 
 SP500ValList.append(Liquidity)
 PortfolioValList.append(Liquidity)
@@ -106,14 +108,14 @@ df = pd.DataFrame({'year': [1999,2000,2001,2002,2003,2004,
     2005,2006,2007,2008,2009,2010,2011,2012, 2014, 2013, 2014]},columns=columns)
 df = df.set_index('year')
 
-ReturnYear = int(Start_date[-4:])
+ReturnYear = 1999#int(Start_date[-4:])
 ReturnMonth = Start_date[-7:-5]
 M = 'Jan'
 StartVal = Liquidity
 EndVal  = 0
 B = False
 for index, row in cons.iterrows():
-    if row[0] == '3/01/2012': # make this the first day you want to establish a 
+    if row[0] == '4/01/1999': # make this the first day you want to establish a 
                               # portfolio. NOTE THAT THIS MUST BE 200 DAYS AHEAD 
                               # OF THE START_DATE
         B = True
@@ -175,7 +177,6 @@ for index, row in cons.iterrows():
             else:
                 pass
             print("Date::",row[0])
-            print(df)
         if int(row[0][-4:]) != ReturnYear:
             '''------- UPDATE PORTFOLIO VALUE---------------------------------- ''' 
             for i, Index in zip(Holdings, range(len(Holdings))): 
@@ -200,7 +201,6 @@ for index, row in cons.iterrows():
             EndVal = PortfolioValue 
             df['Anual'][ReturnYear] = ((EndVal - YearVal) / YearVal)*100
             ReturnYear = int(row[0][-4:])     
-            print("Date::",row[0])
             print(df)
         
         '''---------------STRATERGY EXECUTION-------------------- '''        
@@ -344,7 +344,9 @@ for index, row in cons.iterrows():
                         else: 
                             newPos = True
                             posList.append(newPos)
-                    if True in posList or len(Holdings) == 0: 
+                    if False in posList:
+                        pass 
+                    else: 
                         list_new = i
                         if(i[2] > Liquidity): 
                             pass 
@@ -362,15 +364,30 @@ for index, row in cons.iterrows():
         -------------------------------------------------------------------------------
         ----------------------------------------------------------------------------''' 
         # INVEST A DOLLAR IN INDEX AND DOLLAR IN STRATERGY THEN PLOT RETURNS.
+        Holdings_copy = []
+        list_c = []
         PortfolioValue = 0
         for i in Holdings:
             PortfolioValue += i[5]
         PortfolioValue += Liquidity
-        print("Date::",row[0])
+        for i,row in ticnam.iterrows():
+            ticker = row['Ticker']
+            for L,j in zip(Holdings,range(len(Holdings))):
+                if L[0] == ticker[2:]:
+                    list_c.append(L[0])
+                    list_c.append((L[5]/PortfolioValue)*100)
+                    list_c.append(ticnam['Name'][i])
+                    list_c.append(ticnam['Sector'][i])
+                    Holdings_copy.append(list_c)
+                    list_c = []
+
+        print("Date::",row[1])
         print("SP500 ABOVE 200 MA",Trade,"Liquidity", Liquidity, "Portfolio Value",PortfolioValue,"Num Holdings::",len(Holdings))
-        print("POSentered::",POSITIONS ENTERED ,"Negrebal::", NEGATIVE REBAL,"Posrebal::",POSITIVE REBAL,"OutOfQuint::",SELLQUINT)
+        print("POSentered::",POSENTERED ,"Negrebal::", NEGREBAL,"Posrebal::",POSREBAL,"OutOfQuint::",SELLQUINT)
         print('\n\n\n')
-        print(Holdings)            
+        print(Holdings) 
+        print('\n\n\n')
+        print(Holdings_copy)           
     else:  
         pass
     #SP500ValList.append()

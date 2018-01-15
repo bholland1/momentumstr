@@ -24,27 +24,80 @@ from  momentum_ranking import momentum_ranking
 from Moving_average import Moving_average
 
 
-def ranker(tickers):
+    ## Check for 15% price movement difference. 
+    
+    
+    
+
+def ranker(tickers,start, end):
     list_c = []
     rank_list = []
     #need to change to local file directory
-    file_dir = glob.glob('C:\\FinData\\S&P500\\TimeSeries\\*.csv')
+    #file_dir = glob.glob('C:\\FinData\\S&P500\\TimeSeries\\*.csv')
     tickers.sort()
-    file_dir.sort()
-
-    for file_name,j in zip(file_dir, tickers):
+    
+    for j in tickers:
+            file_name = 'C:\\FinData\\S&P500\\TimeSeries1\\' + j + '.csv'
+           #print(j)
             ticker_data = pd.read_csv(file_name,index_col = 0)
             # test if ticker is trading below 100 day moving average
-            moving_average = Moving_average(ticker_data,100)
-            if not moving_average:
-                pass
-            else:
+            Sdate = start
+            Sdate = Sdate.replace('/','-')
+            Sdate = Sdate[-4:] + '-' + Sdate[-7:-5] + '-'  + Sdate[:-8]
+            Edate = end
+            Edate = Edate.replace('/','-')
+            Edate = Edate[-4:] + '-' + Edate[-7:-5] + '-'  + Edate[:-8]            
+            ticker_data = ticker_data[Sdate:Edate]
+            if len(ticker_data) < 20: 
+                pass 
+            elif len(ticker_data) < 100: #need to fix...  
+                moving_average = Moving_average(ticker_data,len(ticker_data))
+                ticker_data.reset_index()
+                
+                ticker_data = ticker_data[:]
+                Change = ((ticker_data['CLOSE'] - ticker_data['OPEN'].shift())/ticker_data['CLOSE'])*100
+                Price_diff = Change.loc[(Change >= 15)]
+                
                 score = momentum_ranking(ticker_data)
                 list_c.append(j) #need to retain name
                 list_c.append(score)#retail score
-                list_c.append(ticker_data['Close'][-1])
+                list_c.append(ticker_data['CLOSE'][-1])# potential change to open 
+                
+                if len(Price_diff) >= 1: 
+                    list_c.append('+/- 15 jump')
+                elif(not moving_average): 
+                    list_c.append('below 100 ma')          
+                else: 
+                    list_c.append('fine')
                 rank_list.append(list_c)
-                list_c = []
-            score = 0             
+            else:      
+                moving_average = Moving_average(ticker_data,100)
+                ticker_data.reset_index()
+                
+                ticker_data = ticker_data[:-10]
+                Change = ((ticker_data['CLOSE'] - ticker_data['OPEN'].shift())/ticker_data['CLOSE'])*100
+                Price_diff = Change.loc[(Change >= 15)]
+                
+                score = momentum_ranking(ticker_data)
+                list_c.append(j) #need to retain name
+                list_c.append(score)#retail score
+                list_c.append(ticker_data['CLOSE'][-1])# potential change to open 
+                
+                if len(Price_diff) >= 1: 
+                    list_c.append('+/- 15 jump')
+                elif(not moving_average): 
+                    list_c.append('below 100 ma')          
+                else: 
+                    list_c.append('fine')
+                    
+                rank_list.append(list_c)
+                
+            list_c = []
+            score = 0   
+    #print(rank_list)
     rank_list = sorted(rank_list, key=lambda x: x[1], reverse = True)
     return rank_list
+
+
+
+

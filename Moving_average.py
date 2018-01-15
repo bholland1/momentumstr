@@ -19,21 +19,21 @@ Created on Tue Nov 21 17:49:17 2017
 
 import pandas as pd
 import csv
-from get_data_from_yahoo import get_data_from_yahoo
+
 
 def Moving_average(ticker,period):
     
-    Moving_avr = ticker['Close'].rolling(window=period).mean()
-    if Moving_avr[-1] > ticker['Close'][-1]:
+    Moving_avr = ticker['CLOSE'].rolling(window=period).mean()
+    if Moving_avr[-1] > ticker['CLOSE'][-1]:
         return False
     else:     
         return True
     
-def Index_moving_avr(index,period):
-    get_data_from_yahoo([index],period)
+def Index_moving_avr(index,period,start,end):
     
-    file_dir = 'C:\\FinData\\S&P500\\TimeSeries'
+    file_dir = 'C:\FinData\S&P500\\ConList\\'
     file_dir = file_dir + index + '.csv'
     Index = pd.read_csv(file_dir,index_col = 0)
+    Index = Index[start:end]
     
     return Moving_average(Index,period)

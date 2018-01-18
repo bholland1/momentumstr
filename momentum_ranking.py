@@ -26,7 +26,6 @@ import seaborn as sns
 
 def momentum_ranking(ticker):      
     #print(ticker)
-
     ticker.head().round(2)
     ticker['Log'] =  np.log(ticker['CLOSE'])
     ticker['Index'] = range(len(ticker))

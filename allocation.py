@@ -44,7 +44,6 @@ def allocation(ticker, ATR_period, risk_factor, funds_available,start,end):
     else: 
         Edate = Edate[-4:] + '-' + Edate[-7:-5] + '-' + Edate[:-8]            
     ticker = ticker[Sdate:Edate]         
-    ticker = ticker[Sdate:Edate]
     #Need dataset here
     ticker['ATR1'] = abs (ticker['HIGH'] - ticker['LOW'])  
     ticker['ATR2'] = abs (ticker['HIGH'] - ticker['CLOSE'].shift())

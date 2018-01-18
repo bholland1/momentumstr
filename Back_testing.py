@@ -282,8 +282,7 @@ for index, row in cons.iterrows():
                         else:
                             pass
                     for j in A[::-1]:
-                        del Holdings[j] 
-            
+                        del Holdings[j]            
                             #record... 
         '''---------------------------UPDATE HOLDINGS----------------------------------
         -------------------------------------------------------------------------------
@@ -380,28 +379,25 @@ for index, row in cons.iterrows():
                     list_c.append(ticnam['Name'][i])
                     list_c.append(ticnam['Sector'][i])
                     Holdings_copy.append(list_c)
-                    list_c = []
-                    
-        #HoldingsRecord = open("HoldingsRecord.csv",'w')
+                    list_c = []                  
+        HoldingsRecord = open("HoldingsRecord.csv",'w')
         for j in Holdings_copy:
             print(j)
             for i in j:
                 HoldingsRecord.write(str(i))
                 HoldingsRecord.write(",")
             HoldingsRecord.write("\n")
-            
-        
+
         print("\n\n")
         print("Date::",row[0])
         print("Liquidity", Liquidity, "Portfolio Value",PortfolioValue,"Num Holdings::",len(Holdings))
         print("POSentered::",POSENTERED ,"Negrebal::", NEGREBAL,"Posrebal::",POSREBAL,"OutOfQuint::",SELLQUINT)
-    
+        SP500ValList.append(SP500['CLOSE'][index])
+        PortfolioValList.append(PortfolioValue)
     else:  
         pass
 
     SP500ValList.append(SP500['CLOSE'][index])
-
-    
     #SP500ValList.append()
     PortfolioValList.append(PortfolioValue)
     POSENTERED = 0 

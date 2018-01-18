@@ -43,20 +43,30 @@ def ranker(tickers,start, end):
             # test if ticker is trading below 100 day moving average
             Sdate = start
             Sdate = Sdate.replace('/','-')
-            Sdate = Sdate[-4:] + '-' + Sdate[-7:-5] + '-'  + Sdate[:-8]
+            if len(Sdate[:-8]) == 1:
+                Sdate = Sdate[-4:] + '-' + Sdate[-7:-5] + '-'  + '0' + Sdate[:-8]
+            else: 
+                Sdate = Sdate[-4:] + '-' + Sdate[-7:-5] + '-' + Sdate[:-8]
             Edate = end
             Edate = Edate.replace('/','-')
-            Edate = Edate[-4:] + '-' + Edate[-7:-5] + '-'  + Edate[:-8]            
+            if len(Edate[:-8]) == 1:
+                Edate = Edate[-4:] + '-' + Edate[-7:-5] + '-'  + '0' + Edate[:-8]
+            else: 
+                Edate = Edate[-4:] + '-' + Edate[-7:-5] + '-' + Edate[:-8]    
             ticker_data = ticker_data[Sdate:Edate]
             if len(ticker_data) < 20: 
+                print('emergency')
                 pass 
             elif len(ticker_data) < 100: #need to fix...  
                 moving_average = Moving_average(ticker_data,len(ticker_data))
                 ticker_data.reset_index()
-                
-                ticker_data = ticker_data[:]
-                Change = ((ticker_data['CLOSE'] - ticker_data['OPEN'].shift())/ticker_data['CLOSE'])*100
+                Change = abs(((ticker_data['OPEN'] - ticker_data['HIGH'].shift(1))/ticker_data['HIGH'].shift(1)))* 100
+                #Change = abs(((ticker_data['CLOSE'] - ticker_data['OPEN'].shift())/ticker_data['CLOSE'])*100)
                 Price_diff = Change.loc[(Change >= 15)]
+                
+                ticker_data.reset_index()
+                k = 90 - len(ticker_data) 
+                ticker_data = ticker_data[:k]
                 
                 score = momentum_ranking(ticker_data)
                 list_c.append(j) #need to retain name
@@ -69,15 +79,15 @@ def ranker(tickers,start, end):
                     list_c.append('below 100 ma')          
                 else: 
                     list_c.append('fine')
-                rank_list.append(list_c)
+                rank_list.append(list_c)  
             else:      
                 moving_average = Moving_average(ticker_data,100)
-                ticker_data.reset_index()
-                
-                ticker_data = ticker_data[:-10]
-                Change = ((ticker_data['CLOSE'] - ticker_data['OPEN'].shift())/ticker_data['CLOSE'])*100
+                Change = abs(((ticker_data['OPEN'] - ticker_data['HIGH'].shift(1))/ticker_data['HIGH'].shift(1)))* 100
+                #Change = abs(((ticker_data['CLOSE'] - ticker_data['OPEN'].shift())/ticker_data['CLOSE'])*100)
                 Price_diff = Change.loc[(Change >= 15)]
                 
+                ticker_data.reset_index()
+                ticker_data = ticker_data[:-10]
                 score = momentum_ranking(ticker_data)
                 list_c.append(j) #need to retain name
                 list_c.append(score)#retail score
@@ -90,8 +100,7 @@ def ranker(tickers,start, end):
                 else: 
                     list_c.append('fine')
                     
-                rank_list.append(list_c)
-                
+                rank_list.append(list_c)   
             list_c = []
             score = 0   
     #print(rank_list)

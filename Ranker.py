@@ -55,19 +55,18 @@ def ranker(tickers,start, end):
                 Edate = Edate[-4:] + '-' + Edate[-7:-5] + '-' + Edate[:-8]    
             ticker_data = ticker_data[Sdate:Edate]
             if len(ticker_data) < 20: 
-                print('emergency')
+                print("less than 20 days of data:",j)
                 pass 
             elif len(ticker_data) < 100: #need to fix...  
                 moving_average = Moving_average(ticker_data,len(ticker_data))
                 ticker_data.reset_index()
-                Change = abs(((ticker_data['OPEN'] - ticker_data['HIGH'].shift(1))/ticker_data['HIGH'].shift(1)))* 100
+                Change = abs(((ticker_data['OPEN'] - ticker_data['CLOSE'].shift(1))/ticker_data['CLOSE'].shift(1)))* 100
                 #Change = abs(((ticker_data['CLOSE'] - ticker_data['OPEN'].shift())/ticker_data['CLOSE'])*100)
                 Price_diff = Change.loc[(Change >= 15)]
                 
                 ticker_data.reset_index()
-                k = 90 - len(ticker_data) 
+                k = 90
                 ticker_data = ticker_data[:k]
-                
                 score = momentum_ranking(ticker_data)
                 list_c.append(j) #need to retain name
                 list_c.append(score)#retail score
@@ -75,6 +74,8 @@ def ranker(tickers,start, end):
                 
                 if len(Price_diff) >= 1: 
                     list_c.append('+/- 15 jump')
+                elif len(ticker_data) < 90: 
+                    list_c.append('Not enough data')
                 elif(not moving_average): 
                     list_c.append('below 100 ma')          
                 else: 
@@ -82,7 +83,7 @@ def ranker(tickers,start, end):
                 rank_list.append(list_c)  
             else:      
                 moving_average = Moving_average(ticker_data,100)
-                Change = abs(((ticker_data['OPEN'] - ticker_data['HIGH'].shift(1))/ticker_data['HIGH'].shift(1)))* 100
+                Change = abs(((ticker_data['OPEN'] - ticker_data['CLOSE'].shift(1))/ticker_data['CLOSE'].shift(1)))* 100
                 #Change = abs(((ticker_data['CLOSE'] - ticker_data['OPEN'].shift())/ticker_data['CLOSE'])*100)
                 Price_diff = Change.loc[(Change >= 15)]
                 
